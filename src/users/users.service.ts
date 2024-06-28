@@ -45,8 +45,15 @@ export class UsersService {
       throw new Error('New supervisor not found');
     }
 
-    user.supervisor = newSupervisor;
-    await this.userRepository.save(user);
+    const supervisor = user.supervisor;
+    if (user.subordinates.length > 0) {
+      for (const subordinate of user.subordinates) {
+        subordinate.supervisor = supervisor;
+        await this.userRepository.save(subordinate);
+      }
+    }
+
+    await this.userRepository.save({...user, supervisor: newSupervisor, subordinates: []});
   }
 
   async delete(id: number): Promise<void> {
